@@ -1,0 +1,98 @@
+[
+  {
+    "name": "WWF Japan / University of Tokyo",
+    "country": "Regional",
+    "type": "CSO / NGO",
+    "url": "",
+    "topics": [
+      "Marine spatial planning",
+      "Finance & de-risking",
+      "Fisheries co-existence",
+      "Environmental & sensitivity mapping",
+      "Biodiversity & open data"
+    ]
+  },
+  {
+    "name": "IGT",
+    "country": "Korea",
+    "type": "Research / think tank",
+    "url": "",
+    "topics": [
+      "Local content requirement",
+      "Port capacity & development",
+      "Grid integration & storage",
+      "Finance & de-risking",
+      "Community engagement & social licence"
+    ]
+  },
+  {
+    "name": "Ocean Energy Pathway",
+    "country": "Japan",
+    "type": "CSO / NGO",
+    "url": "",
+    "topics": [
+      "Marine spatial planning",
+      "Community engagement & social licence",
+      "Fisheries co-existence",
+      "Communications & narratives",
+      "Environmental & sensitivity mapping"
+    ]
+  },
+  {
+    "name": "Energy and Space",
+    "country": "Korea",
+    "type": "Research / think tank",
+    "url": "",
+    "topics": [
+      "Policy & permitting streamlining",
+      "Regional vessel & workforce sharing",
+      "Domestic workforce development",
+      "Communications & narratives",
+      "Supply chain cooperation"
+    ]
+  },
+  {
+    "name": "Renewable Energy Institute (REI)",
+    "country": "Japan",
+    "type": "CSO / NGO",
+    "url": "",
+    "topics": [
+      "Marine spatial planning",
+      "Policy & permitting streamlining",
+      "Regional vessel & workforce sharing",
+      "Local content requirement",
+      "Port capacity & development",
+      "Grid integration & storage",
+      "Energy procurement mechanisms",
+      "Finance & de-risking",
+      "Community engagement & social licence",
+      "Fisheries co-existence",
+      "Policy comparison & lessons"
+    ]
+  },
+  {
+    "name": "Heinrich Böll Foundation East Asia",
+    "country": "Regional",
+    "type": "Foundation / donor",
+    "url": "",
+    "topics": [
+      "Marine spatial planning",
+      "Regional vessel & workforce sharing",
+      "Port capacity & development",
+      "Domestic workforce development"
+    ]
+  },
+  {
+    "name": "Solutions for Our Climate (SFOC)",
+    "country": "Korea",
+    "type": "CSO / NGO",
+    "url": "",
+    "topics": [
+      "Marine spatial planning",
+      "Regional vessel & workforce sharing",
+      "Domestic workforce development",
+      "Fisheries co-existence",
+      "Communications & narratives"
+    ]
+  }
+]

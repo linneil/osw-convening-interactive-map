@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSW APAC Convening 2026 — Partner map</title>
+
+  <!-- Leaflet (map library, BSD-2). Pinned version. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    /* ---- Brand tokens -------------------------------------------------
+       Confirm --iri-red against the brand guide before publishing. The
+       choropleth tints below (--fill-1..3) are shades of that red; if you
+       change the red, regenerate the tints to match. */
+    :root {
+      --iri-red: #b11116;
+      --iri-red-soft: #f3d7d8;
+      --fill-0: #e6e6e6;   /* no data / context country */
+      --fill-1: #e7a3a5;   /* 1–2 organisations */
+      --fill-2: #cc5b5f;   /* 3–4 organisations */
+      --fill-3: #a3121a;   /* 5+ organisations  */
+      --ink: #1c1c1c;
+      --muted: #6b6b6b;
+      --line: #e3e3e3;
+      --bg: #ffffff;
+      --map-bg: #f3f6f8;
+      --chip-bg: #f4f4f4;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: var(--font); color: var(--ink); background: var(--bg);
+           line-height: 1.45; font-size: 15px; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px 16px 40px; }
+
+    /* ---- Filter bar -------------------------------------------------- */
+    .controls { display: flex; flex-wrap: wrap; gap: 14px 18px;
+                align-items: flex-end; margin-bottom: 14px; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    .control-label { font-size: 11px; letter-spacing: 0.06em;
+                     text-transform: uppercase; color: var(--muted); }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { border: 1px solid var(--line); background: #fff; color: var(--ink);
+            padding: 6px 12px; border-radius: 999px; font-size: 13px;
+            cursor: pointer; transition: all 0.12s ease; }
+    .pill:hover { border-color: var(--iri-red); }
+    .pill.active { background: var(--iri-red); border-color: var(--iri-red); color: #fff; }
+    .pill .n { opacity: 0.7; margin-left: 4px; font-variant-numeric: tabular-nums; }
+    select { font-family: var(--font); font-size: 13px; padding: 7px 10px;
+             border: 1px solid var(--line); border-radius: 8px; background: #fff;
+             color: var(--ink); cursor: pointer; min-width: 220px; }
+
+    /* ---- Map (fixed, non-interactive frame) -------------------------- */
+    #map { height: 420px; width: 100%; border: 1px solid var(--line);
+           border-radius: 10px; background: var(--map-bg); }
+    .leaflet-container { background: var(--map-bg); outline: none; }
+    /* country polygons that carry organisations are clickable */
+    path.clickable { cursor: pointer; }
+    .leaflet-tooltip.country-tip { background: rgba(255,255,255,0.95);
+           border: 1px solid var(--line); color: var(--ink); font-weight: 600;
+           box-shadow: none; }
+
+    .maprow { display: flex; gap: 12px; align-items: stretch; }
+    .maprow #map { flex: 1; }
+    .legend { font-size: 12px; color: var(--muted); display: flex; gap: 16px;
+              flex-wrap: wrap; align-items: center; margin: 10px 2px 4px; }
+    .legend .sw { display: inline-block; width: 14px; height: 14px;
+                  border-radius: 3px; vertical-align: -2px; margin-right: 5px;
+                  border: 1px solid rgba(0,0,0,0.08); }
+
+    /* ---- Results ----------------------------------------------------- */
+    .resultline { font-size: 13px; color: var(--muted); margin: 10px 0 12px; }
+    .resultline b { color: var(--ink); }
+    .clear { margin-left: 10px; color: var(--iri-red); cursor: pointer;
+             text-decoration: underline; font-size: 12px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+             gap: 14px; }
+    .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 15px;
+            background: #fff; }
+    .card h3 { margin: 0 0 8px; font-size: 15px; line-height: 1.3; }
+    .card h3 a { color: var(--ink); text-decoration: none; }
+    .card h3 a:hover { color: var(--iri-red); text-decoration: underline; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .badge { font-size: 11px; padding: 3px 8px; border-radius: 6px;
+             background: var(--iri-red-soft); color: var(--iri-red); font-weight: 600; }
+    .badge.country { background: #ededed; color: #444; }
+    .topics { display: flex; flex-wrap: wrap; gap: 5px; }
+    .topic { font-size: 11px; padding: 2px 7px; border-radius: 4px;
+             background: var(--chip-bg); color: #555; }
+    .empty { grid-column: 1 / -1; text-align: center; color: var(--muted);
+             padding: 30px 10px; border: 1px dashed var(--line); border-radius: 10px; }
+    .errbox { padding: 16px; border: 1px solid var(--iri-red);
+              background: var(--iri-red-soft); border-radius: 10px;
+              color: var(--iri-red); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Location — click a country or a chip</span>
+        <div class="pills" id="countryPills"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Organisation type</span>
+        <select id="typeSelect"><option value="">All types</option></select>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="legend" id="legend">
+      <span><span class="sw" style="background:var(--fill-1)"></span>1–2</span>
+      <span><span class="sw" style="background:var(--fill-2)"></span>3–4</span>
+      <span><span class="sw" style="background:var(--fill-3)"></span>5+</span>
+      <span><span class="sw" style="background:var(--fill-0)"></span>No respondents</span>
+    </div>
+
+    <div class="resultline" id="resultline"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <script>
+    /* Non-geographic locations get a chip but no polygon. */
+    const NON_GEO_LABELS = { "Regional": "Regional / multi-country" };
+
+    let DATA = [];
+    let GEO = null;
+    let state = { country: null, type: null };
+    let map, geoLayer, focusBounds;
+
+    const $ = (id) => document.getElementById(id);
+    const countryLabel = (c) => NON_GEO_LABELS[c] || c;
+
+    function countsByCountry() {
+      const counts = {};
+      DATA.forEach(o => { counts[o.country] = (counts[o.country] || 0) + 1; });
+      return counts;
+    }
+    function fillFor(n) {
+      if (!n) return getCss('--fill-0');
+      if (n <= 2) return getCss('--fill-1');
+      if (n <= 4) return getCss('--fill-2');
+      return getCss('--fill-3');
+    }
+    function getCss(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+    /* ---- Map ------------------------------------------------------- */
+    function buildMap() {
+      // Every interaction is disabled — the map reads as a fixed graphic.
+      map = L.map('map', {
+        dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+        boxZoom: false, keyboard: false, touchZoom: false, zoomControl: false,
+        attributionControl: false
+      });
+
+      const counts = countsByCountry();
+      geoLayer = L.geoJSON(GEO, {
+        style: (f) => styleFor(f, counts),
+        onEachFeature: (f, layer) => {
+          const key = f.properties.key;
+          const name = f.properties.name;
+          const n = key ? (counts[key] || 0) : 0;
+          if (key) {
+            layer.bindTooltip(name + ' — ' + n, { sticky: true, className: 'country-tip' });
+            layer.on('mouseover', () => layer.setStyle({ weight: 2, fillOpacity: 0.95 }));
+            layer.on('mouseout', () => geoLayer.resetStyle(layer));
+            layer.on('click', () => toggleCountry(key));
+          }
+        }
+      }).addTo(map);
+
+      // Focus the view on the countries that can hold organisations, so the
+      // larger context countries (China etc.) simply bleed off the edges.
+      const focusKeys = new Set(['Japan', 'Korea', 'Taiwan']);
+      let b = null;
+      geoLayer.eachLayer(l => {
+        if (focusKeys.has(l.feature.properties.key)) {
+          b = b ? b.extend(l.getBounds()) : l.getBounds();
+        }
+      });
+      focusBounds = b || geoLayer.getBounds();
+      fitFixed();
+      window.addEventListener('resize', debounce(fitFixed, 150));
+    }
+
+    function styleFor(f, counts) {
+      const key = f.properties.key;
+      const n = key ? (counts[key] || 0) : 0;
+      const selected = key && state.country === key;
+      return {
+        fillColor: key ? fillFor(n) : getCss('--fill-0'),
+        fillOpacity: key ? (selected ? 1 : 0.85) : 0.5,
+        color: selected ? getCss('--iri-red') : '#ffffff',
+        weight: selected ? 2.5 : 1,
+        className: (key && n) ? 'clickable' : ''
+      };
+    }
+
+    function fitFixed() {
+      map.invalidateSize();
+      map.fitBounds(focusBounds, { padding: [18, 18] });
+    }
+
+    function repaint() {
+      if (!geoLayer) return;
+      const counts = countsByCountry();
+      geoLayer.eachLayer(l => l.setStyle(styleFor(l.feature, counts)));
+    }
+
+    /* ---- Filter controls ------------------------------------------ */
+    function buildTypeSelect() {
+      const sel = $('typeSelect');
+      [...new Set(DATA.map(o => o.type))].sort().forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t; sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => { state.type = sel.value || null; render(); });
+    }
+    function buildCountryPills() {
+      const counts = countsByCountry();
+      const box = $('countryPills'); box.innerHTML = '';
+      const all = document.createElement('button');
+      all.className = 'pill'; all.dataset.country = ''; all.textContent = 'All locations';
+      box.appendChild(all);
+      Object.keys(counts).sort().forEach(country => {
+        const b = document.createElement('button');
+        b.className = 'pill'; b.dataset.country = country;
+        b.innerHTML = countryLabel(country) + ' <span class="n">' + counts[country] + '</span>';
+        box.appendChild(b);
+      });
+      box.querySelectorAll('.pill').forEach(p => {
+        p.addEventListener('click', () => {
+          const c = p.dataset.country;
+          state.country = c ? (state.country === c ? null : c) : null;
+          render();
+        });
+      });
+    }
+    function toggleCountry(country) {
+      state.country = (state.country === country) ? null : country;
+      render();
+    }
+
+    /* ---- Render ---------------------------------------------------- */
+    function render() {
+      document.querySelectorAll('#countryPills .pill').forEach(p => {
+        const c = p.dataset.country;
+        const on = (c === '' && !state.country) || (c && c === state.country);
+        p.classList.toggle('active', on);
+      });
+      repaint();
+      const rows = DATA.filter(o =>
+        (!state.country || o.country === state.country) &&
+        (!state.type || o.type === state.type)
+      );
+      renderCards(rows);
+      renderResultLine(rows.length);
+    }
+    function renderResultLine(n) {
+      let html = 'Showing <b>' + n + '</b> of <b>' + DATA.length + '</b> organisations';
+      const filt = [];
+      if (state.country) filt.push(countryLabel(state.country));
+      if (state.type) filt.push(state.type);
+      if (filt.length) html += ' — ' + filt.join(' · ') +
+        ' <span class="clear" id="clearBtn">clear filters</span>';
+      $('resultline').innerHTML = html;
+      const cb = $('clearBtn');
+      if (cb) cb.addEventListener('click', () => {
+        state = { country: null, type: null }; $('typeSelect').value = ''; render();
+      });
+    }
+    function renderCards(rows) {
+      const box = $('cards'); box.innerHTML = '';
+      if (!rows.length) {
+        box.innerHTML = '<div class="empty">No organisations match this combination.</div>';
+        return;
+      }
+      rows.forEach(o => {
+        const card = document.createElement('div'); card.className = 'card';
+        const title = o.url
+          ? '<a href="' + o.url + '" target="_blank" rel="noopener">' + o.name + '</a>'
+          : o.name;
+        const topics = (o.topics || []).map(t => '<span class="topic">' + t + '</span>').join('');
+        card.innerHTML = '<h3>' + title + '</h3>' +
+          '<div class="badges"><span class="badge country">' + countryLabel(o.country) +
+          '</span><span class="badge">' + o.type + '</span></div>' +
+          '<div class="topics">' + topics + '</div>';
+        box.appendChild(card);
+      });
+    }
+
+    function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+    /* ---- Load data + geometry ------------------------------------- */
+    Promise.all([
+      fetch('orgs.json').then(r => { if (!r.ok) throw new Error('orgs.json ' + r.status); return r.json(); }),
+      fetch('countries.geojson').then(r => { if (!r.ok) throw new Error('countries.geojson ' + r.status); return r.json(); })
+    ]).then(([data, geo]) => {
+      DATA = data; GEO = geo;
+      buildMap(); buildTypeSelect(); buildCountryPills(); render();
+    }).catch(err => {
+      document.querySelector('.wrap').innerHTML =
+        '<div class="errbox">Could not load data (' + err.message +
+        ').<br>If you are previewing locally, run a small server in this folder ' +
+        '(<code>python3 -m http.server</code>) rather than opening the file directly. ' +
+        'On GitHub Pages it loads normally.</div>';
+    });
+  </script>
+</body>
+</html>
